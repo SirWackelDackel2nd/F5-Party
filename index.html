@@ -158,6 +158,21 @@ textarea{min-height:100px; resize:vertical}
 .result .t{font-weight:900; font-size:clamp(30px,5vw,46px); margin:12px 0 10px}
 .result p{font-size:19px; margin:0 auto 22px; max-width:520px}
 
+/* ---------- gifts ---------- */
+.gifts{max-width:760px; margin:40px auto 0; display:grid; grid-template-columns:260px 1fr; gap:32px; align-items:center}
+.gifts h2{font-weight:900; font-size:clamp(30px,4.6vw,46px); line-height:1.1; margin:0 0 12px}
+.gift-text{font-size:clamp(19px,2.6vw,24px); line-height:1.45; margin:0}
+.gift-hint{font-family:var(--mono); font-size:14px; color:var(--muted); margin:14px 0 0}
+.gift-hint b{color:var(--red)}
+.pig{border:0; background:none; padding:0; cursor:pointer; width:100%; display:block; -webkit-tap-highlight-color:transparent}
+.pig svg{width:100%; height:auto; display:block; overflow:visible}
+.pig .pig-coin{animation:coinIdle 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
+@keyframes coinIdle{50%{transform:translateY(-6px) rotate(8deg)}}
+.pig.drop .pig-coin{animation:coinDrop .55s ease-in forwards}
+@keyframes coinDrop{0%{transform:translateY(-10px)} 70%{transform:translateY(40px) scaleX(.35); opacity:1} 100%{transform:translateY(46px) scaleX(.2); opacity:0}}
+.pig.drop svg{animation:wiggle .5s .45s ease-in-out}
+@keyframes wiggle{25%{transform:rotate(-4deg)} 50%{transform:rotate(3deg) translateY(-4px)} 75%{transform:rotate(-2deg)}}
+@media (max-width:720px){ .gifts{grid-template-columns:1fr; text-align:center; gap:12px} .pig{max-width:220px; margin:0 auto} }
 footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13px; color:var(--muted)}
 
 @media (max-width:720px){
@@ -223,6 +238,78 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     </button>
   </div>
   <p class="count" aria-live="polite">&gt; update installs in <b id="days">–</b> <span id="unit">Tagen</span></p>
+
+  <p class="sep" aria-hidden="true">-------------------------------</p>
+
+  <section class="gifts" aria-labelledby="gifts-h">
+    <button class="pig" type="button" id="pig" aria-label="Münze ins Sparschwein werfen">
+      <svg viewBox="0 0 320 280" aria-hidden="true">
+  <defs>
+    <radialGradient id="pgBody" cx="38%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#FFE1E8"/>
+      <stop offset="0.45" stop-color="#F9AEBF"/>
+      <stop offset="1" stop-color="#E57E97"/>
+    </radialGradient>
+    <radialGradient id="pgSnout" cx="40%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#FFC2CF"/>
+      <stop offset="1" stop-color="#E77892"/>
+    </radialGradient>
+    <linearGradient id="pgLeg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F6A3B6"/>
+      <stop offset="1" stop-color="#DE718B"/>
+    </linearGradient>
+    <radialGradient id="pgCoin" cx="35%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#FFF3B0"/>
+      <stop offset="0.55" stop-color="#F7C93E"/>
+      <stop offset="1" stop-color="#D99A12"/>
+    </radialGradient>
+  </defs>
+  <g stroke="#111" stroke-linejoin="round" stroke-linecap="round">
+    <!-- back legs -->
+    <rect x="96" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/>
+    <rect x="196" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/>
+    <!-- tail -->
+    <path d="M262 150c18-4 26 8 18 16s-18-2-8-10c8-6 20 0 22 8" fill="none" stroke-width="6"/>
+    <!-- far ear -->
+    <path d="M190 66l20-38 14 46z" fill="#E77892" stroke-width="6"/>
+    <!-- body -->
+    <ellipse cx="170" cy="148" rx="102" ry="82" fill="url(#pgBody)" stroke-width="7"/>
+    <!-- near ear -->
+    <path d="M110 72l-6-46 40 28z" fill="#F7A6B9" stroke-width="6"/>
+    <path d="M114 62l-3-22 18 14z" fill="#E77892" stroke="none"/>
+    <!-- coin slot -->
+    <rect x="148" y="70" width="58" height="12" rx="6" fill="#3a1520" stroke-width="5"/>
+    <!-- front legs -->
+    <rect x="112" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/>
+    <rect x="214" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/>
+    <!-- snout -->
+    <ellipse cx="80" cy="152" rx="30" ry="34" fill="url(#pgSnout)" stroke-width="6"/>
+    <ellipse cx="72" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
+    <ellipse cx="88" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
+    <!-- happy closed eyes (Mii laugh) -->
+    <path d="M110 112q10-12 20 0" fill="none" stroke-width="6"/>
+    <path d="M146 108q10-12 20 0" fill="none" stroke-width="6"/>
+    <!-- smile -->
+    <path d="M104 182q14 16 32 4" fill="none" stroke-width="5"/>
+    <!-- blush -->
+    <ellipse cx="128" cy="138" rx="12" ry="7" fill="#F27C98" stroke="none" opacity="0.7"/>
+    <!-- highlight -->
+    <ellipse cx="200" cy="108" rx="34" ry="14" fill="#fff" stroke="none" opacity="0.55" transform="rotate(-18 200 108)"/>
+  </g>
+  <!-- coin -->
+  <g class="pig-coin" stroke="#111" stroke-width="5">
+    <ellipse cx="177" cy="34" rx="20" ry="20" fill="url(#pgCoin)"/>
+    <ellipse cx="177" cy="34" rx="12" ry="12" fill="none" stroke="#C88A0E" stroke-width="2.5"/><text x="177" y="40.5" text-anchor="middle" font-family="Lexend, Arial, sans-serif" font-weight="900" font-size="18" fill="#7a5200" stroke="none">€</text>
+  </g>
+</svg>
+
+    </button>
+    <div>
+      <h2 id="gifts-h"><span class="r">Side Quest:</span> Geschenke</h2>
+      <p class="gift-text">Unser Haushalt ist vollständig, aber das Sparschwein freut sich über Futter :)</p>
+      <p class="gift-hint">&gt; tippe aufs Schwein · <b id="coins">0</b> <span id="coinWord">Münzen</span> eingeworfen</p>
+    </div>
+  </section>
 
   <p class="sep" aria-hidden="true">-------------------------------</p>
 
@@ -320,6 +407,16 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     const url = URL.createObjectURL(new Blob([ics], {type:'text/calendar'}));
     const a = document.createElement('a'); a.href = url; a.download = 'freaking-forty.ics';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  });
+
+
+  /* piggy bank */
+  let coins = 0;
+  const pig = $('pig');
+  pig.addEventListener('click', () => {
+    if(pig.classList.contains('drop')) return;
+    pig.classList.add('drop');
+    setTimeout(() => { coins++; $('coins').textContent = coins; $('coinWord').textContent = coins === 1 ? 'Münze' : 'Münzen'; pig.classList.remove('drop'); }, 1000);
   });
 
   const HEART = '<svg width="24" height="21" viewBox="0 0 8 7" shape-rendering="crispEdges"><path fill="#111" d="M1 0h2v1h2V0h2v1h1v3H7v1H6v1H5v1H3V6H2V5H1V4H0V1h1z"/><path fill="#E8222E" d="M1 1h2v1h2V1h2v3H6v1H5v1H3V5H2V4H1z"/><path fill="#fff" d="M2 1h1v1H2z"/></svg>';

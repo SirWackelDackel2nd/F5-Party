@@ -384,8 +384,33 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   const configured = !!CONFIG.FORM_ID;
   if(!configured) $('demo').hidden = false;
 
+  /* retro sounds, generated in the browser (no audio files) */
+  let actx = null;
+  function ctx(){
+    if(!actx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; actx = new AC(); }
+    if(actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function tone(type, f0, f1, start, dur, vol){
+    const a = ctx(); if(!a) return;
+    const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + start;
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t0);
+    if(f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  const sfx = {
+    jump(){ tone('square', 180, 720, 0, 0.18, 0.12); },
+    coin(){ tone('square', 988, 988, 0, 0.08, 0.1); tone('square', 1319, 1319, 0.08, 0.35, 0.1); }
+  };
+  window.f5sfx = sfx;
+
   const key = $('keycap');
-  key.addEventListener('click', () => { key.classList.add('pressed'); setTimeout(()=>key.classList.remove('pressed'), 140); });
+  key.addEventListener('click', () => { sfx.jump(); key.classList.add('pressed'); setTimeout(()=>key.classList.remove('pressed'), 140); });
 
   function tick(){
     const ms = new Date(CONFIG.PARTY_START) - new Date();
@@ -416,6 +441,7 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   pig.addEventListener('click', () => {
     if(pig.classList.contains('drop')) return;
     pig.classList.add('drop');
+    setTimeout(() => sfx.coin(), 420);
     setTimeout(() => { coins++; $('coins').textContent = coins; $('coinWord').textContent = coins === 1 ? 'Münze' : 'Münzen'; pig.classList.remove('drop'); }, 1000);
   });
 
@@ -574,7 +600,7 @@ async function init(){
   let downAt = null;
   canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
   canvas.addEventListener('pointerup', e => {
-    if(downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) jumpAll();
+    if(downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6){ jumpAll(); window.f5sfx && window.f5sfx.jump(); }
     downAt = null;
   });
   function jumpAll(){ chars.forEach((c, i) => c.jump = 1 + i * 0.15); }

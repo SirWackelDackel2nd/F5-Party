@@ -13,16 +13,17 @@
   ================================================================
   SETUP (once) – answers go into a Google Form only you can see
   ================================================================
-  1. Create a Google Form with these 4 questions:
+  1. Create a Google Form with these 5 questions:
        - "Name"              → Short answer
        - "Kommst du?"        → Multiple choice, options exactly:
                                "Ja"   and   "Nein"
-       - "Anzahl Personen"   → Short answer
+       - "Erwachsene"        → Short answer
+       - "Kinder"            → Short answer
        - "Nachricht"         → Paragraph
   2. Form ⋮ menu → "Get pre-filled link". Fill dummy values,
      click "Get link", copy it. It looks like:
      https://docs.google.com/forms/d/e/1FAIpQL.../viewform?usp=pp_url
-        &entry.111111=Max&entry.222222=Ja&entry.333333=2&entry.444444=Hi
+        &entry.111111=Max&entry.222222=Ja&entry.333333=2&entry.444444=1&entry.555555=Hi
   3. Paste the long ID after /d/e/ into FORM_ID and the entry
      numbers into FIELDS below.
   4. Privacy: Form Settings → Responses → turn OFF
@@ -33,14 +34,17 @@
 -->
 <script>
 const CONFIG = {
-  FORM_ID: "",                      // e.g. "1FAIpQLSc...xyz"
+  FORM_ID: "1FAIpQLSdw3ScT7d-UWgl_ertqIdX5okSHYrxSVruCuJqkfRDs_8YcHg",                      // e.g. "1FAIpQLSc...xyz"
   FIELDS: {
-    name:    "entry.000000001",
-    attend:  "entry.000000002",     // values sent: "Ja" / "Nein"
-    guests:  "entry.000000003",
-    message: "entry.000000004"
+    name:    "entry.953061176",
+    attend:  "entry.1066024776",     // values sent: "Ja" / "Nein"
+    adults:  "entry.1350845089",
+    kids:    "entry.1512199818",
+    message: "entry.2015372626"
   },
-  MAX_GUESTS: 10,
+  MAX_ADULTS: 10,
+  MAX_KIDS: 10,
+  PIG_FULL_AT: 100,                 // coins until the pig is round and overjoyed
   PARTY_START: "2027-05-15T17:00:00+02:00"
 };
 </script>
@@ -141,7 +145,12 @@ textarea{min-height:100px; resize:vertical}
 .stepper button:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
 .stepper button:disabled{opacity:.3; cursor:not-allowed}
 .stepper output{font-weight:900; font-size:34px; min-width:48px; text-align:center}
-.hearts{display:flex; gap:5px; flex-wrap:wrap}
+.hearts{display:flex; gap:5px; flex-wrap:wrap; align-items:center}
+.hearts.small svg{width:16px; height:14px}
+.people{display:grid; gap:14px}
+.prow{display:grid; grid-template-columns:130px 1fr; align-items:center; gap:12px}
+.pl{font-weight:800; font-size:19px}
+@media (max-width:480px){ .prow{grid-template-columns:1fr; gap:6px} }
 .hint{font-size:14px; color:var(--muted); margin:8px 0 0}
 .hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
 .submit{
@@ -164,15 +173,38 @@ textarea{min-height:100px; resize:vertical}
 .gift-text{font-size:clamp(19px,2.6vw,24px); line-height:1.45; margin:0}
 .gift-hint{font-family:var(--mono); font-size:14px; color:var(--muted); margin:14px 0 0}
 .gift-hint b{color:var(--red)}
-.pig{border:0; background:none; padding:0; cursor:pointer; width:100%; display:block; -webkit-tap-highlight-color:transparent}
+.pig{border:0; background:none; padding:0; cursor:pointer; width:100%; display:block; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; touch-action:manipulation}
 .pig svg{width:100%; height:auto; display:block; overflow:visible}
+.pig svg *{transform-box:view-box}
+.pg-body{transform-origin:170px 148px; transform:scale(var(--sx), var(--sy))}
+.pg-leg{transform:translate(calc(var(--lx) * (var(--sx) - 1) * 1px), calc(82px * (var(--sy) - 1)))}
+.pg-tail{transform:translate(calc(102px * (var(--sx) - 1)), 0)}
+.pg-face{transform:translate(calc(102px * (1 - var(--sx))), calc(-18px * (1 - var(--f))))}
+.pig-coin-pos{transform:translate(0, calc(78px * (1 - var(--sy))))}
+.pg-body,.pg-leg,.pg-tail,.pg-face,.pig-coin-pos{transition:transform .7s cubic-bezier(.3,1.5,.5,1)}
+.mood,.pg-sparkles,.pg-ribs,.pg-blush{transition:opacity .4s}
+.mood{opacity:0}
+.pig[data-mood="0"] .m-sad,.pig[data-mood="1"] .m-meh,.pig[data-mood="2"] .m-ok,.pig[data-mood="3"] .m-happy,.pig[data-mood="4"] .m-happy{opacity:1}
+.pg-ribs{opacity:0} .pig[data-mood="0"] .pg-ribs{opacity:.9} .pig[data-mood="1"] .pg-ribs{opacity:.45}
+.pg-blush{opacity:0} .pig[data-mood="2"] .pg-blush{opacity:.5} .pig[data-mood="3"] .pg-blush,.pig[data-mood="4"] .pg-blush{opacity:.85}
+.pg-sparkles{opacity:0} .pig[data-mood="4"] .pg-sparkles{opacity:1; animation:twinkle 1.4s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.35}}
+.feed{margin-top:18px; max-width:420px}
+.feed-head{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-family:var(--mono); font-size:14px; font-weight:700; margin-bottom:6px}
+.feed-head b{color:var(--red)}
+.feed-bar{height:16px; border:3px solid var(--ink); border-radius:8px; overflow:hidden; background:#fff}
+.feed-bar i{display:block; height:100%; width:0; background:#F49AB0; transition:width .7s}
 .pig .pig-coin{animation:coinIdle 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
 @keyframes coinIdle{50%{transform:translateY(-6px) rotate(8deg)}}
 .pig.drop .pig-coin{animation:coinDrop .55s ease-in forwards}
 @keyframes coinDrop{0%{transform:translateY(-10px)} 70%{transform:translateY(40px) scaleX(.35); opacity:1} 100%{transform:translateY(46px) scaleX(.2); opacity:0}}
 .pig.drop svg{animation:wiggle .5s .45s ease-in-out}
+.pig .fly-coin{transform-box:fill-box; transform-origin:center; animation:flyDrop .42s ease-in forwards}
+@keyframes flyDrop{0%{transform:translate(var(--dx), -26px)} 75%{transform:translate(0, 40px) scaleX(.35); opacity:1} 100%{transform:translate(0, 46px) scaleX(.2); opacity:0}}
+.pig.munch svg{animation:munch .22s ease-in-out infinite}
+@keyframes munch{50%{transform:translateY(-3px) rotate(-2deg)}}
 @keyframes wiggle{25%{transform:rotate(-4deg)} 50%{transform:rotate(3deg) translateY(-4px)} 75%{transform:rotate(-2deg)}}
-@media (max-width:720px){ .gifts{grid-template-columns:1fr; text-align:center; gap:12px} .pig{max-width:220px; margin:0 auto} }
+@media (max-width:720px){ .gifts{grid-template-columns:1fr; text-align:center; gap:12px} .pig{max-width:220px; margin:0 auto} .feed{margin-left:auto; margin-right:auto} }
 footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13px; color:var(--muted)}
 
 @media (max-width:720px){
@@ -242,72 +274,87 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   <p class="sep" aria-hidden="true">-------------------------------</p>
 
   <section class="gifts" aria-labelledby="gifts-h">
-    <button class="pig" type="button" id="pig" aria-label="Münze ins Sparschwein werfen">
-      <svg viewBox="0 0 320 280" aria-hidden="true">
+    <button class="pig" type="button" id="pig" aria-label="Münze ins Sparschwein werfen" style="--sx:.66; --sy:.92; --f:0">
+      <svg viewBox="0 0 320 290" aria-hidden="true">
   <defs>
     <radialGradient id="pgBody" cx="38%" cy="30%" r="75%">
-      <stop offset="0" stop-color="#FFE1E8"/>
-      <stop offset="0.45" stop-color="#F9AEBF"/>
-      <stop offset="1" stop-color="#E57E97"/>
+      <stop offset="0" stop-color="#FFE1E8"/><stop offset="0.45" stop-color="#F9AEBF"/><stop offset="1" stop-color="#E57E97"/>
     </radialGradient>
     <radialGradient id="pgSnout" cx="40%" cy="30%" r="80%">
-      <stop offset="0" stop-color="#FFC2CF"/>
-      <stop offset="1" stop-color="#E77892"/>
+      <stop offset="0" stop-color="#FFC2CF"/><stop offset="1" stop-color="#E77892"/>
     </radialGradient>
     <linearGradient id="pgLeg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#F6A3B6"/>
-      <stop offset="1" stop-color="#DE718B"/>
+      <stop offset="0" stop-color="#F6A3B6"/><stop offset="1" stop-color="#DE718B"/>
     </linearGradient>
     <radialGradient id="pgCoin" cx="35%" cy="30%" r="80%">
-      <stop offset="0" stop-color="#FFF3B0"/>
-      <stop offset="0.55" stop-color="#F7C93E"/>
-      <stop offset="1" stop-color="#D99A12"/>
+      <stop offset="0" stop-color="#FFF3B0"/><stop offset="0.55" stop-color="#F7C93E"/><stop offset="1" stop-color="#D99A12"/>
     </radialGradient>
   </defs>
-  <g stroke="#111" stroke-linejoin="round" stroke-linecap="round">
-    <!-- back legs -->
-    <rect x="96" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/>
-    <rect x="196" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/>
-    <!-- tail -->
-    <path d="M262 150c18-4 26 8 18 16s-18-2-8-10c8-6 20 0 22 8" fill="none" stroke-width="6"/>
-    <!-- far ear -->
-    <path d="M190 66l20-38 14 46z" fill="#E77892" stroke-width="6"/>
-    <!-- body -->
-    <ellipse cx="170" cy="148" rx="102" ry="82" fill="url(#pgBody)" stroke-width="7"/>
-    <!-- near ear -->
-    <path d="M110 72l-6-46 40 28z" fill="#F7A6B9" stroke-width="6"/>
-    <path d="M114 62l-3-22 18 14z" fill="#E77892" stroke="none"/>
-    <!-- coin slot -->
-    <rect x="148" y="70" width="58" height="12" rx="6" fill="#3a1520" stroke-width="5"/>
-    <!-- front legs -->
-    <rect x="112" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/>
-    <rect x="214" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/>
-    <!-- snout -->
-    <ellipse cx="80" cy="152" rx="30" ry="34" fill="url(#pgSnout)" stroke-width="6"/>
-    <ellipse cx="72" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
-    <ellipse cx="88" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
-    <!-- happy closed eyes (Mii laugh) -->
-    <path d="M110 112q10-12 20 0" fill="none" stroke-width="6"/>
-    <path d="M146 108q10-12 20 0" fill="none" stroke-width="6"/>
-    <!-- smile -->
-    <path d="M104 182q14 16 32 4" fill="none" stroke-width="5"/>
-    <!-- blush -->
-    <ellipse cx="128" cy="138" rx="12" ry="7" fill="#F27C98" stroke="none" opacity="0.7"/>
-    <!-- highlight -->
-    <ellipse cx="200" cy="108" rx="34" ry="14" fill="#fff" stroke="none" opacity="0.55" transform="rotate(-18 200 108)"/>
+  <g class="pig-all" stroke="#111" stroke-linejoin="round" stroke-linecap="round">
+    <g class="pg-leg" style="--lx:-57"><rect x="96" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/></g>
+    <g class="pg-leg" style="--lx:43"><rect x="196" y="196" width="34" height="50" rx="14" fill="url(#pgLeg)" stroke-width="6"/></g>
+    <g class="pg-tail"><path d="M262 150c18-4 26 8 18 16s-18-2-8-10c8-6 20 0 22 8" fill="none" stroke-width="6"/></g>
+    <g class="pg-body">
+      <path d="M190 66l20-38 14 46z" fill="#E77892" stroke-width="6" vector-effect="non-scaling-stroke"/>
+      <ellipse cx="170" cy="148" rx="102" ry="82" fill="url(#pgBody)" stroke-width="7" vector-effect="non-scaling-stroke"/>
+      <g class="pg-ribs" fill="none" stroke="#C9627C" stroke-width="3.5">
+        <path d="M222 124q12 24 0 48" vector-effect="non-scaling-stroke"/>
+        <path d="M240 128q10 20 0 40" vector-effect="non-scaling-stroke"/>
+        <path d="M256 134q7 14 0 28" vector-effect="non-scaling-stroke"/>
+      </g>
+      <path d="M110 72l-6-46 40 28z" fill="#F7A6B9" stroke-width="6" vector-effect="non-scaling-stroke"/>
+      <path d="M114 62l-3-22 18 14z" fill="#E77892" stroke="none"/>
+      <rect x="148" y="70" width="58" height="12" rx="6" fill="#3a1520" stroke-width="5" vector-effect="non-scaling-stroke"/>
+      <ellipse cx="200" cy="108" rx="34" ry="14" fill="#fff" stroke="none" opacity="0.55" transform="rotate(-18 200 108)"/>
+    </g>
+    <g class="pg-leg" style="--lx:-40"><rect x="112" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/></g>
+    <g class="pg-leg" style="--lx:62"><rect x="214" y="204" width="36" height="52" rx="15" fill="url(#pgLeg)" stroke-width="6"/></g>
+    <g class="pg-face">
+      <ellipse cx="80" cy="152" rx="30" ry="34" fill="url(#pgSnout)" stroke-width="6"/>
+      <ellipse cx="72" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
+      <ellipse cx="88" cy="140" rx="5" ry="9" fill="#5a1f2e" stroke="none"/>
+      <g class="mood m-sad">
+        <ellipse cx="122" cy="126" rx="5" ry="7" fill="#111" stroke="none"/>
+        <ellipse cx="154" cy="122" rx="5" ry="7" fill="#111" stroke="none"/>
+        <path d="M112 114l15 -7M145 103l15 7" fill="none" stroke-width="4"/>
+        <path d="M106 190q14-14 30 0" fill="none" stroke-width="5"/>
+      </g>
+      <g class="mood m-meh">
+        <ellipse cx="122" cy="122" rx="5" ry="7" fill="#111" stroke="none"/>
+        <ellipse cx="154" cy="118" rx="5" ry="7" fill="#111" stroke="none"/>
+        <path d="M106 186q16 6 30 -2" fill="none" stroke-width="5"/>
+      </g>
+      <g class="mood m-ok">
+        <path d="M110 112q10-12 20 0M146 108q10-12 20 0" fill="none" stroke-width="6"/>
+        <path d="M104 182q14 16 32 4" fill="none" stroke-width="5"/>
+      </g>
+      <g class="mood m-happy">
+        <path d="M110 112q10-12 20 0M146 108q10-12 20 0" fill="none" stroke-width="6"/>
+        <path d="M100 176q18 30 40 4z" fill="#5a1f2e" stroke-width="5"/>
+        <path d="M110 188q9 8 20 2" fill="#F27C98" stroke="none"/>
+      </g>
+      <ellipse class="pg-blush" cx="128" cy="138" rx="12" ry="7" fill="#F27C98" stroke="none"/>
+    </g>
+    <g class="pg-sparkles" fill="#F7C93E" stroke-width="3">
+      <path d="M40 60l5 12 12 5-12 5-5 12-5-12-12-5 12-5z"/>
+      <path d="M290 70l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
+      <path d="M300 200l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+    </g>
   </g>
-  <!-- coin -->
-  <g class="pig-coin" stroke="#111" stroke-width="5">
+  <g class="pig-coin-pos"><g class="pig-coin" stroke="#111" stroke-width="5">
     <ellipse cx="177" cy="34" rx="20" ry="20" fill="url(#pgCoin)"/>
     <ellipse cx="177" cy="34" rx="12" ry="12" fill="none" stroke="#C88A0E" stroke-width="2.5"/><text x="177" y="40.5" text-anchor="middle" font-family="Lexend, Arial, sans-serif" font-weight="900" font-size="18" fill="#7a5200" stroke="none">€</text>
-  </g>
+  </g></g>
 </svg>
-
     </button>
     <div>
       <h2 id="gifts-h"><span class="r">Side Quest:</span> Geschenke</h2>
       <p class="gift-text">Unser Haushalt ist vollständig, aber das Sparschwein freut sich über Futter :)</p>
-      <p class="gift-hint">&gt; tippe aufs Schwein · <b id="coins">0</b> <span id="coinWord">Münzen</span> eingeworfen</p>
+      <div class="feed" aria-live="polite">
+        <div class="feed-head"><span>Futterstand</span><span><b id="coins">0</b> <span id="coinWord">Münzen</span> · <span id="mood">hungrig</span></span></div>
+        <div class="feed-bar"><i id="feedFill"></i></div>
+      </div>
+      <p class="gift-hint">&gt; tippe aufs Schwein, um es zu füttern – oder halte gedrückt für einen Münzregen</p>
     </div>
   </section>
 
@@ -345,14 +392,28 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
       </fieldset>
 
       <div id="countWrap" hidden>
-        <span class="lbl" id="countLbl">WIE VIELE PERSONEN?</span>
-        <div class="stepper" role="group" aria-labelledby="countLbl">
-          <button type="button" id="minus" aria-label="Eine Person weniger">−</button>
-          <output id="count" aria-live="polite">1</output>
-          <button type="button" id="plus" aria-label="Eine Person mehr">+</button>
-          <div class="hearts" id="hearts" aria-hidden="true"></div>
+        <span class="lbl">WER KOMMT MIT?</span>
+        <div class="people">
+          <div class="prow">
+            <span class="pl" id="adLbl">Erwachsene</span>
+            <div class="stepper" role="group" aria-labelledby="adLbl">
+              <button type="button" id="adMinus" aria-label="Ein Erwachsener weniger">−</button>
+              <output id="adults" aria-live="polite">1</output>
+              <button type="button" id="adPlus" aria-label="Ein Erwachsener mehr">+</button>
+              <div class="hearts" id="adHearts" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="prow">
+            <span class="pl" id="kiLbl">Kinder</span>
+            <div class="stepper" role="group" aria-labelledby="kiLbl">
+              <button type="button" id="kiMinus" aria-label="Ein Kind weniger">−</button>
+              <output id="kids" aria-live="polite">0</output>
+              <button type="button" id="kiPlus" aria-label="Ein Kind mehr">+</button>
+              <div class="hearts small" id="kiHearts" aria-hidden="true"></div>
+            </div>
+          </div>
         </div>
-        <p class="hint">Dich selbst mitgezählt – inkl. Partner:in und Kinder.</p>
+        <p class="hint">Erwachsene inkl. dir selbst.</p>
       </div>
 
       <div>
@@ -405,7 +466,8 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   }
   const sfx = {
     jump(){ tone('square', 180, 720, 0, 0.18, 0.12); },
-    coin(){ tone('square', 988, 988, 0, 0.08, 0.1); tone('square', 1319, 1319, 0.08, 0.35, 0.1); }
+    coin(){ tone('square', 988, 988, 0, 0.08, 0.1); tone('square', 1319, 1319, 0.08, 0.35, 0.1); },
+    blip(hi){ tone('square', hi ? 1319 : 1175, hi ? 1568 : 1319, 0, 0.07, 0.06); }
   };
   window.f5sfx = sfx;
 
@@ -435,28 +497,81 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   });
 
 
-  /* piggy bank */
-  let coins = 0;
+  /* piggy bank – counted on this device only */
   const pig = $('pig');
+  const MOODS = ['hungrig', 'knurrt noch', 'zufrieden', 'glücklich', 'kugelrund & überglücklich'];
+  let coins = 0;
+  try{ coins = Math.max(0, parseInt(localStorage.getItem('f5-pig-coins'), 10) || 0); }catch(_){}
+  function renderPig(){
+    const f = Math.min(1, coins / CONFIG.PIG_FULL_AT);
+    const mood = f >= 1 ? 4 : f >= 0.66 ? 3 : f >= 0.33 ? 2 : f >= 0.1 ? 1 : 0;
+    pig.style.setProperty('--f', f.toFixed(3));
+    pig.style.setProperty('--sx', (0.66 + 0.46 * f).toFixed(3));
+    pig.style.setProperty('--sy', (0.92 + 0.16 * f).toFixed(3));
+    pig.dataset.mood = mood;
+    $('coins').textContent = coins.toLocaleString('de-AT');
+    $('coinWord').textContent = coins === 1 ? 'Münze' : 'Münzen';
+    $('mood').textContent = MOODS[mood];
+    $('feedFill').style.width = (f * 100).toFixed(1) + '%';
+  }
+  renderPig();
+  const saveCoins = () => { try{ localStorage.setItem('f5-pig-coins', String(coins)); }catch(_){} };
+
+  /* press and hold: coins rain into the pig */
+  let holdTimer = null, rainTimer = null, held = false, eatClick = false, blipHi = false;
+  function spawnCoin(){
+    const src = pig.querySelector('.pig-coin');
+    const c = src.cloneNode(true);
+    c.classList.remove('pig-coin'); c.classList.add('fly-coin');
+    c.style.setProperty('--dx', (Math.random() * 40 - 20).toFixed(0) + 'px');
+    src.parentNode.parentNode.appendChild(c);
+    setTimeout(() => { c.remove(); coins++; renderPig(); sfx.blip(blipHi = !blipHi); }, 400);
+  }
+  function startHold(){
+    held = true; pig.classList.add('munch');
+    spawnCoin(); rainTimer = setInterval(spawnCoin, 110);
+  }
+  function endHold(){
+    clearTimeout(holdTimer); holdTimer = null;
+    if(!held) return;
+    held = false; eatClick = true;
+    clearInterval(rainTimer); rainTimer = null;
+    setTimeout(() => { pig.classList.remove('munch'); saveCoins(); }, 450);
+  }
+  pig.addEventListener('pointerdown', e => {
+    if(e.button > 0) return;
+    eatClick = false;
+    holdTimer = setTimeout(startHold, 350);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => pig.addEventListener(ev, endHold));
+  pig.addEventListener('contextmenu', e => e.preventDefault());
+
   pig.addEventListener('click', () => {
+    if(eatClick){ eatClick = false; return; }
     if(pig.classList.contains('drop')) return;
     pig.classList.add('drop');
     setTimeout(() => sfx.coin(), 420);
-    setTimeout(() => { coins++; $('coins').textContent = coins; $('coinWord').textContent = coins === 1 ? 'Münze' : 'Münzen'; pig.classList.remove('drop'); }, 1000);
+    setTimeout(() => {
+      coins++; renderPig(); pig.classList.remove('drop'); saveCoins();
+    }, 1000);
   });
 
   const HEART = '<svg width="24" height="21" viewBox="0 0 8 7" shape-rendering="crispEdges"><path fill="#111" d="M1 0h2v1h2V0h2v1h1v3H7v1H6v1H5v1H3V6H2V5H1V4H0V1h1z"/><path fill="#E8222E" d="M1 1h2v1h2V1h2v3H6v1H5v1H3V5H2V4H1z"/><path fill="#fff" d="M2 1h1v1H2z"/></svg>';
   const BROKEN = '<path fill="#111" d="M1 0h2v1h2V0h2v1h1v3H7v1H6v1H5v1H3V6H2V5H1V4H0V1h1z"/><path fill="#9a9a9a" d="M1 1h2v1h1v1h1V1h2v3H6v1H5v1H4V4H3V5H2V4H1z"/>';
-  let count = 1;
+  let adults = 1, kids = 0;
   function renderCount(){
-    $('count').textContent = count;
-    $('hearts').innerHTML = HEART.repeat(count);
-    $('minus').disabled = count <= 1;
-    $('plus').disabled = count >= CONFIG.MAX_GUESTS;
+    $('adults').textContent = adults; $('kids').textContent = kids;
+    $('adHearts').innerHTML = HEART.repeat(adults);
+    $('kiHearts').innerHTML = HEART.repeat(kids);
+    $('adMinus').disabled = adults <= 1; $('adPlus').disabled = adults >= CONFIG.MAX_ADULTS;
+    $('kiMinus').disabled = kids <= 0;   $('kiPlus').disabled = kids >= CONFIG.MAX_KIDS;
   }
-  $('minus').addEventListener('click', () => { if(count > 1){ count--; renderCount(); } });
-  $('plus').addEventListener('click', () => { if(count < CONFIG.MAX_GUESTS){ count++; renderCount(); } });
+  $('adMinus').addEventListener('click', () => { if(adults > 1){ adults--; renderCount(); } });
+  $('adPlus').addEventListener('click',  () => { if(adults < CONFIG.MAX_ADULTS){ adults++; renderCount(); } });
+  $('kiMinus').addEventListener('click', () => { if(kids > 0){ kids--; renderCount(); } });
+  $('kiPlus').addEventListener('click',  () => { if(kids < CONFIG.MAX_KIDS){ kids++; renderCount(); } });
   renderCount();
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 
   const form = $('rsvp');
   form.addEventListener('change', e => { if(e.target.name === 'attend') $('countWrap').hidden = e.target.value !== 'Ja'; });
@@ -467,7 +582,8 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     $('resIcon').innerHTML = attending ? HEART.replace(/<\/?svg[^>]*>/g,'') : BROKEN;
     if(attending){
       $('resTitle').innerHTML = '<span class="r">Update</span> erfolgreich!';
-      $('resText').textContent = `Danke, ${name}! ${count === 1 ? '1 Person ist' : count + ' Personen sind'} angemeldet. Wir sehen uns am 15.05.2027!`;
+      const who = plural(adults, 'Erwachsener', 'Erwachsene') + (kids ? ' und ' + plural(kids, 'Kind', 'Kinder') : '');
+      $('resText').textContent = `Danke, ${name}! ${who} angemeldet. Wir sehen uns am 15.05.2027!`;
     } else {
       $('resTitle').textContent = 'Schade!';
       $('resText').textContent = `Danke fürs Bescheid geben, ${name} – wir trinken eins auf dich.`;
@@ -493,7 +609,8 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     const data = {
       [CONFIG.FIELDS.name]: name,
       [CONFIG.FIELDS.attend]: attendEl.value,
-      [CONFIG.FIELDS.guests]: attending ? String(count) : '0',
+      [CONFIG.FIELDS.adults]: attending ? String(adults) : '0',
+      [CONFIG.FIELDS.kids]:   attending ? String(kids) : '0',
       [CONFIG.FIELDS.message]: $('message').value.trim()
     };
     const f = document.createElement('form');

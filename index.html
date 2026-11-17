@@ -9,39 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
-<!--
-  ================================================================
-  SETUP (once) – answers go into a Google Form only you can see
-  ================================================================
-  1. Create a Google Form with these 5 questions:
-       - "Name"              → Short answer
-       - "Kommst du?"        → Multiple choice, options exactly:
-                               "Ja"   and   "Nein"
-       - "Erwachsene"        → Short answer
-       - "Kinder"            → Short answer
-       - "Nachricht"         → Paragraph
-  2. Form ⋮ menu → "Get pre-filled link". Fill dummy values,
-     click "Get link", copy it. It looks like:
-     https://docs.google.com/forms/d/e/1FAIpQL.../viewform?usp=pp_url
-        &entry.111111=Max&entry.222222=Ja&entry.333333=2&entry.444444=1&entry.555555=Hi
-  3. Paste the long ID after /d/e/ into FORM_ID and the entry
-     numbers into FIELDS below.
-  4. Privacy: Form Settings → Responses → turn OFF
-     "View results summary". Don't share the form's edit link or
-     the linked Sheet with anyone.
-  Until FORM_ID is set the page runs in demo mode and sends nothing.
-  ================================================================
--->
+
 <script>
 const CONFIG = {
-  FORM_ID: "1FAIpQLSdw3ScT7d-UWgl_ertqIdX5okSHYrxSVruCuJqkfRDs_8YcHg",                      // e.g. "1FAIpQLSc...xyz"
-  FIELDS: {
-    name:    "entry.953061176",
-    attend:  "entry.1066024776",     // values sent: "Ja" / "Nein"
-    adults:  "entry.1350845089",
-    kids:    "entry.1512199818",
-    message: "entry.2015372626"
-  },
+  API_URL: "https://script.google.com/macros/s/AKfycbzxyZM5yCNjr0dIBL-XG0YojuePVBh3ugdwxKZKG5TrUWx3AS29B3MENhMTlLj5AXBl/exec",                      // Apps Script web app URL (…/exec)
   MAX_ADULTS: 10,
   MAX_KIDS: 10,
   PIG_FULL_AT: 100,                 // coins until the pig is round and overjoyed
@@ -365,7 +336,7 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     <p class="sub">&gt; Bitte gib uns kurz Bescheid, ob du dabei bist.</p>
 
     <form id="rsvp" novalidate>
-      <p class="demo" id="demo" hidden><strong>Demo-Modus:</strong> Noch nicht mit Google Forms verbunden – Antworten werden nicht gesendet.</p>
+      <p class="demo" id="demo" hidden><strong>Demo-Modus:</strong> Noch nicht mit Google Sheets verbunden – Antworten werden nicht gesendet.</p>
 
       <div>
         <label class="lbl" for="name">NAME</label>
@@ -437,12 +408,11 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
   <footer>F5 · Freaking Forty · System Update v40.0</footer>
 </main>
 
-<iframe name="gf-sink" id="gf-sink" title="" hidden></iframe>
 
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const configured = !!CONFIG.FORM_ID;
+  const configured = !!CONFIG.API_URL;
   if(!configured) $('demo').hidden = false;
 
   /* retro sounds, generated in the browser (no audio files) */
@@ -590,9 +560,39 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     }
     r.focus();
   }
-  $('again').addEventListener('click', () => { $('result').hidden = true; form.hidden = false; $('send').disabled = false; $('name').focus(); });
+  $('again').addEventListener('click', () => { $('result').hidden = true; form.hidden = false; $('send').disabled = false; submitId = newId(); $('name').focus(); });
 
-  form.addEventListener('submit', e => {
+  /* sending: only report success once the Sheet confirms it */
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  let submitId = newId();               // same id on retries → the Sheet never gets duplicates
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function sendOnce(data){
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try{
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // no CORS preflight
+        body: JSON.stringify(data),
+        redirect: 'follow',
+        signal: ctrl.signal
+      });
+      const j = await res.json();
+      if(!j || j.ok !== true) throw new Error((j && j.error) || 'not ok');
+      return true;
+    } finally { clearTimeout(timer); }
+  }
+  async function sendWithRetry(data){
+    const waits = [0, 1500, 4000];
+    let last;
+    for(const w of waits){
+      if(w) await sleep(w);
+      try{ return await sendOnce(data); }catch(e){ last = e; }
+    }
+    throw last;
+  }
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const err = $('err'); err.textContent = '';
     const name = $('name').value.trim();
@@ -600,31 +600,29 @@ footer{margin-top:56px; text-align:center; font-family:var(--mono); font-size:13
     if(!name){ err.textContent = 'Bitte gib deinen Namen ein.'; $('name').focus(); return; }
     if(!attendEl){ err.textContent = 'Bitte wähle: dabei oder nicht?'; return; }
     const attending = attendEl.value === 'Ja';
-    $('send').disabled = true;
+    const btn = $('send');
+    btn.disabled = true; btn.textContent = 'Wird gesendet …';
 
+    const done = () => { btn.textContent = 'Absenden'; showResult(attending, name); };
     // Bots fill the hidden field: pretend success, send nothing.
-    if($('website').value){ showResult(attending, name); return; }
-    if(!configured){ setTimeout(() => showResult(attending, name), 300); return; }
+    if($('website').value){ done(); return; }
+    if(!configured){ setTimeout(done, 300); return; }
 
     const data = {
-      [CONFIG.FIELDS.name]: name,
-      [CONFIG.FIELDS.attend]: attendEl.value,
-      [CONFIG.FIELDS.adults]: attending ? String(adults) : '0',
-      [CONFIG.FIELDS.kids]:   attending ? String(kids) : '0',
-      [CONFIG.FIELDS.message]: $('message').value.trim()
+      id: submitId,
+      name,
+      attend: attendEl.value,
+      adults: attending ? adults : 0,
+      kids:   attending ? kids : 0,
+      message: $('message').value.trim()
     };
-    const f = document.createElement('form');
-    f.method = 'POST'; f.target = 'gf-sink';
-    f.action = 'https://docs.google.com/forms/d/e/' + encodeURIComponent(CONFIG.FORM_ID) + '/formResponse';
-    for(const [k, v] of Object.entries(data)){
-      const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i);
+    try{
+      await sendWithRetry(data);
+      done();
+    }catch(_){
+      btn.disabled = false; btn.textContent = 'Nochmal senden';
+      err.textContent = 'Die Anmeldung ist leider nicht angekommen. Bitte prüfe deine Internetverbindung und tippe auf „Nochmal senden“ – deine Angaben bleiben erhalten.';
     }
-    document.body.appendChild(f);
-    let done = false;
-    const finish = () => { if(done) return; done = true; f.remove(); showResult(attending, name); };
-    $('gf-sink').onload = finish;
-    setTimeout(finish, 4000);
-    f.submit();
   });
 })();
 </script>
